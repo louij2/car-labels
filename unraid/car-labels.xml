@@ -14,7 +14,7 @@
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
   <TemplateURL/>
   <Icon>https://raw.githubusercontent.com/louij2/car-labels/main/car_labels/static/icon.png</Icon>
-  <ExtraParams>--restart=unless-stopped --user=99:100 --memory=512m --cpus=1</ExtraParams>
+  <ExtraParams>--restart=unless-stopped --memory=512m --cpus=1</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>

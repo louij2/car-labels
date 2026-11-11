@@ -45,13 +45,16 @@ Run a CUPS server with the DYMO queue (for example `olbat/cupsd`, which ships th
 PPDs). Share its `/run/cups` with this container and name the queue:
 
 ```sh
-docker run -d --name car-labels -p 8710:8080 --user 99:100 \
+docker run -d --name car-labels -p 8710:8080 \
   -v /path/to/data:/data -v cups-sock:/run/cups \
   -e PRINTER=DYMO_LabelWriter_450 louij2/car-labels
 ```
 
 Printing goes over the local socket because the default CUPS policy refuses to take the
-document over TCP.
+document over TCP. Leave the container running as root (the default) when printing: CUPS
+only lets root or the job's owner send the document, and a uid like 99 has no name inside
+the CUPS container, so `lp` answers "Unauthorized". Saved files are chowned to the owner
+of `/data`.
 
 | Variable | Default | |
 |---|---|---|

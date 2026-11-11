@@ -196,9 +196,21 @@ def print_label():
     return {"jobs": jobs}
 
 
+def _own(path):
+    """Running as root (CUPS only lets root or the job's owner send the document over the
+    socket), so hand files back to whoever owns DATA_DIR (99:100 on Unraid)."""
+    try:
+        st = os.stat(DATA_DIR)
+        os.chown(path, st.st_uid, st.st_gid)
+    except OSError:
+        pass
+
+
 def _saved_dir():
     d = os.path.join(DATA_DIR, "saved")
-    os.makedirs(d, exist_ok=True)
+    if not os.path.isdir(d):
+        os.makedirs(d, exist_ok=True)
+        _own(d)
     return d
 
 
@@ -245,6 +257,7 @@ def saved_put():
     with open(tmp, "w") as f:
         json.dump(entry, f, indent=1)
     os.replace(tmp, os.path.join(_saved_dir(), sid + ".json"))
+    _own(os.path.join(_saved_dir(), sid + ".json"))
     return {"id": sid}
 
 
