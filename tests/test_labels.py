@@ -30,12 +30,16 @@ def test_every_template_renders(tid):
     t = TEMPLATES[tid]
     img, used = render.dymo_label(t, example(t), {"title": "TEST", "line2": "two", "line3": "three"})
     assert img.size == (render.W, render.H) and used < render.LABEL_H
-    assert render.to_pdf(render.a4_sheet(t, example(t), copies=3))[:4] == b"%PDF"
+    assert render.to_pdf(render.a4_sheet(t, example(t), {"title": "TEST"}, copies=3))[:4] == b"%PDF"
 
 
 def test_empty_fields_still_render():
     for t in TEMPLATES.values():
-        render.dymo_label(t, {})
+        if t.get("card_only"):
+            with pytest.raises(render.LabelError):
+                render.dymo_label(t, {})
+        else:
+            render.dymo_label(t, {})
 
 
 def test_logo_card():

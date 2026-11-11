@@ -1,0 +1,11 @@
+{
+  "id": "info-card-only",
+  "name": "Info card only",
+  "make": "Any",
+  "part": "Partner sticker",
+  "description": "Just the info card from step 3, for a sticker that goes beside the part: logos, a title and two lines. Fill in step 3; there is nothing to copy in step 2.",
+  "size": [56, 0],
+  "card_only": true,
+  "fields": [],
+  "elements": []
+}

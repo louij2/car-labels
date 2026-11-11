@@ -289,6 +289,10 @@ def fitted(tpl, fields, fit):
 
 def pieces(tpl, fields, info=None, logo=None, scale=None, fit=None):
     """The sticker (rotated later to run along the label when it is too wide) and the info card."""
+    if tpl.get("card_only"):
+        if info is None or not has_info(info, logo):
+            raise LabelError("fill in the info card in step 3")
+        return [info_card(info, logo)]
     if fit:
         s = fitted(tpl, fields, fit)
     else:

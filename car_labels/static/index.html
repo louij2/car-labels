@@ -208,7 +208,7 @@ function pickTemplate(id, values, fitValues) {
   tpl = cfg.templates.find(t => t.id === id) || cfg.templates[0];
   for (const b of document.querySelectorAll(".tpl")) b.setAttribute("aria-pressed", b.dataset.id === tpl.id);
   $("#tpl-desc").textContent = tpl.description;
-  $("#pv-size").textContent = `${tpl.size[0]} × ${tpl.size[1]} mm`;
+  $("#pv-size").textContent = tpl.size[1] ? `${tpl.size[0]} × ${tpl.size[1]} mm` : "";
   const box = $("#fields");
   box.innerHTML = "";
   const saved = values || store.get("fields:" + tpl.id) || {};
