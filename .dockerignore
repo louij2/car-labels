@@ -1,0 +1,6 @@
+.git
+tests
+unraid
+*.png
+!car_labels/static/*.png
+__pycache__

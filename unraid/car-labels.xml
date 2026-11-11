@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>car-labels</Name>
+  <Repository>louij2/car-labels:latest</Repository>
+  <Registry>https://hub.docker.com/r/louij2/car-labels</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/louij2/car-labels/issues</Support>
+  <Project>https://github.com/louij2/car-labels</Project>
+  <Overview>Web portal for reprinting damaged car part stickers (VAG engine ECU, BMW/Aisin gearbox TCU, generic part sticker). Pick a template, type the numbers off the old sticker, then download a PNG/PDF for a DYMO LabelWriter or A4 sticker paper. On the LAN it can also print straight to a DYMO through a CUPS container's /run/cups socket, and keep a library of saved labels.</Overview>
+  <Category>Tools:Utilities Other:</Category>
+  <WebUI>http://[IP]:[PORT:8080]/</WebUI>
+  <TemplateURL/>
+  <Icon>https://raw.githubusercontent.com/louij2/car-labels/main/car_labels/static/icon.png</Icon>
+  <ExtraParams>--restart=unless-stopped --user=99:100 --memory=512m --cpus=1</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires>Optional: a CUPS container with the DYMO queue, sharing /run/cups as a named volume.</Requires>
+  <Config Name="WebUI" Target="8080" Default="8095" Mode="tcp" Description="Web interface" Type="Port" Display="always" Required="true" Mask="false">8095</Config>
+  <Config Name="Data" Target="/data" Default="/mnt/user/appdata/car-labels" Mode="rw" Description="saved/ (label library) and logos/ (shared logos, PNG). Owned by 99:100." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/car-labels</Config>
+  <Config Name="CUPS socket" Target="/run/cups" Default="cups-sock" Mode="rw" Description="The CUPS container's /run/cups (a named volume or a path). Leave the printer empty to turn printing off." Type="Path" Display="always" Required="false" Mask="false">cups-sock</Config>
+  <Config Name="Printer" Target="PRINTER" Default="DYMO_LabelWriter_450" Mode="" Description="CUPS queue name. Empty = download only." Type="Variable" Display="always" Required="false" Mask="false">DYMO_LabelWriter_450</Config>
+  <Config Name="Print options" Target="PRINT_OPTIONS" Default="media=w167h539 scaling=100" Mode="" Description="lp -o options (99019 = w167h539)" Type="Variable" Display="advanced" Required="false" Mask="false">media=w167h539 scaling=100</Config>
+  <Config Name="LAN ranges" Target="LAN_CIDRS" Default="10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10" Mode="" Description="Clients allowed to print and use the library. Requests with Cloudflare headers never count." Type="Variable" Display="advanced" Required="false" Mask="false">10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10</Config>
+  <Config Name="Trusted proxies" Target="TRUSTED_PROXIES" Default="" Mode="" Description="Reverse proxy addresses whose X-Forwarded-For is honoured" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="TZ" Target="TZ" Default="Europe/London" Mode="" Description="" Type="Variable" Display="advanced" Required="false" Mask="false">Europe/London</Config>
+</Container>

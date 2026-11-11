@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Car Labels</title>
+<meta name="description" content="Reprint a damaged car part sticker: pick the template, type the numbers off the old one, print it on a DYMO or sticker paper.">
+<link rel="icon" href="/static/icon.png">
+<style>
+:root {
+  --bg: #f4f5f7; --panel: #ffffff; --ink: #16181d; --muted: #5d6370; --line: #dde0e6;
+  --accent: #1f5fd1; --accent-ink: #ffffff; --soft: #eef3fd; --bad: #b42318; --good: #16794c;
+  --paper: #ffffff; --shadow: 0 1px 2px rgb(0 0 0 / .06), 0 4px 16px rgb(0 0 0 / .05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111317; --panel: #1a1d23; --ink: #e8eaee; --muted: #9aa1ad; --line: #2c3039;
+    --accent: #6b9cff; --accent-ink: #0b1020; --soft: #1d2638; --bad: #ff8a80; --good: #5fd39a;
+    --paper: #f7f7f5; --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { padding: 22px 16px 8px; max-width: 1180px; margin: 0 auto; }
+header h1 { margin: 0; font-size: 24px; letter-spacing: -.01em; }
+header p { margin: 4px 0 0; color: var(--muted); }
+main { max-width: 1180px; margin: 0 auto; padding: 12px 16px 40px;
+  display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+@media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); } .preview { position: static !important; } }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
+section h2 { margin: 0 0 4px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+section h2 .n { width: 22px; height: 22px; border-radius: 50%; background: var(--soft); color: var(--accent);
+  display: inline-grid; place-items: center; font-size: 12px; font-weight: 700; }
+.sub { color: var(--muted); margin: 0 0 12px; font-size: 13.5px; }
+.tpls { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.tpl { text-align: left; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  border-radius: 10px; padding: 10px 12px; cursor: pointer; font: inherit; }
+.tpl b { display: block; font-size: 14px; }
+.tpl span { color: var(--muted); font-size: 12.5px; }
+.tpl[aria-pressed="true"] { border-color: var(--accent); background: var(--soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px 12px; }
+label { display: block; font-size: 13px; font-weight: 600; }
+label small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; min-height: 1em; }
+input[type=text], input[type=number], select { width: 100%; margin-top: 4px; padding: 8px 10px; font: inherit;
+  color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
+input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+button.b { font: inherit; font-size: 14px; padding: 8px 12px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+button.b.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.b:disabled { opacity: .5; cursor: default; }
+.preview { position: sticky; top: 12px; }
+.paper { background: #e9ebef; border-radius: 10px; padding: 14px; display: grid; place-items: center; min-height: 200px; }
+.paper img { width: 100%; max-width: 260px; background: var(--paper); box-shadow: 0 2px 10px rgb(0 0 0 / .18); border-radius: 3px; }
+.status { font-size: 13px; color: var(--muted); margin-top: 8px; min-height: 1.4em; }
+.status.bad { color: var(--bad); } .status.good { color: var(--good); }
+.lan { display: none; } body.is-lan .lan { display: block; } body.is-lan .lan.row { display: flex; }
+.lib { list-style: none; margin: 8px 0 0; padding: 0; }
+.lib li { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.lib li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib li small { color: var(--muted); }
+.note { font-size: 12.5px; color: var(--muted); }
+.logo-thumb { max-height: 40px; max-width: 120px; background: #fff; border: 1px solid var(--line); border-radius: 4px; display: none; }
+footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Car Labels</h1>
+  <p>Reprint a worn or damaged part sticker. Pick the sticker, type the numbers off the old one, then print it.</p>
+</header>
+<main>
+  <div>
+    <section>
+      <h2><span class="n">1</span>Which sticker?</h2>
+      <p class="sub" id="tpl-desc">Loading templates…</p>
+      <div class="tpls" id="tpls" role="group" aria-label="Templates"></div>
+    </section>
+
+    <section>
+      <h2><span class="n">2</span>Copy the numbers off the old sticker</h2>
+      <p class="sub">Type each field as it is printed. The barcode is generated from the number printed under it.</p>
+      <div class="grid" id="fields"></div>
+      <div class="row">
+        <button class="b" id="example" type="button">Fill with example</button>
+        <button class="b" id="clear" type="button">Clear</button>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">3</span>Info card <span class="note">(optional)</span></h2>
+      <p class="sub">A second sticker to go beside the part: who tuned it, what car it is from, a note. Leave it empty to skip it.</p>
+      <div class="grid">
+        <label>Title<small>Big and bold</small><input type="text" id="i-title" maxlength="40" placeholder="M135i - TCU"></label>
+        <label>Line 2<small>Medium</small><input type="text" id="i-line2" maxlength="50" placeholder="TQ: 650nm"></label>
+        <label>Line 3<small>Small print</small><input type="text" id="i-line3" maxlength="70" placeholder="BMW 674608 10 · Aisin AW 9453614 01"></label>
+        <label>Logo<small>Black on white works best</small>
+          <select id="logo-pick"><option value="">No logo</option><option value="upload">Upload an image…</option></select>
+        </label>
+      </div>
+      <div class="row">
+        <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp" hidden>
+        <img class="logo-thumb" id="logo-thumb" alt="Chosen logo">
+      </div>
+    </section>
+
+    <section class="lan">
+      <h2><span class="n">★</span>Library</h2>
+      <p class="sub">Saved labels on this server, for reprints. Only shown on the local network.</p>
+      <div class="row" style="margin-top:0">
+        <input type="text" id="save-name" placeholder="Name, e.g. Dan's M135i TCU" style="flex:1;min-width:180px;margin:0">
+        <button class="b" id="save" type="button">Save</button>
+      </div>
+      <ul class="lib" id="lib"></ul>
+    </section>
+  </div>
+
+  <aside class="preview">
+    <section>
+      <h2>Preview <span class="note" id="pv-size"></span></h2>
+      <div class="paper"><img id="pv" alt="Label preview"></div>
+      <div class="status" id="status" role="status"></div>
+      <div class="lan row" style="margin-top:12px">
+        <label style="display:flex;align-items:center;gap:6px;font-weight:600">Copies
+          <input type="number" id="copies" min="1" max="10" value="1" style="width:64px;margin:0"></label>
+        <button class="b primary" id="print" type="button">Print on DYMO</button>
+      </div>
+      <div class="row">
+        <button class="b" data-dl="png:dymo" type="button">PNG (DYMO)</button>
+        <button class="b" data-dl="pdf:dymo" type="button">PDF (DYMO)</button>
+        <button class="b" data-dl="pdf:a4" type="button">PDF (A4 sticker paper)</button>
+      </div>
+      <p class="note">DYMO files are sized for a 59 × 190 mm 99019 label. Print them at 100%, not "fit to page". The A4 sheet prints each sticker at its real size.</p>
+    </section>
+  </aside>
+</main>
+<footer>
+  Made for repairing labels on your own parts. Barcodes are Code 128 of the printed number, which is what VAG and Aisin use, but check one against the original before you rely on a scanner reading it.
+  <span id="ver"></span>
+</footer>
+<script>
+const $ = s => document.querySelector(s);
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem("car-labels:" + k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem("car-labels:" + k, JSON.stringify(v)); } catch {} },
+};
+let cfg, tpl, logo = null, timer, lastUrl;
+
+function status(msg, kind = "") { const s = $("#status"); s.textContent = msg; s.className = "status " + kind; }
+
+function job(extra = {}) {
+  const fields = {};
+  for (const f of tpl.fields) fields[f.key] = $("#f-" + f.key).value;
+  const info = { title: $("#i-title").value, line2: $("#i-line2").value, line3: $("#i-line3").value };
+  return { template: tpl.id, fields, info, logo, ...extra };
+}
+
+function remember() {
+  const j = job();
+  store.set("tpl", tpl.id);
+  store.set("fields:" + tpl.id, j.fields);
+  store.set("info", j.info);
+}
+
+async function post(url, body) {
+  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) {
+    let msg = r.statusText;
+    try { msg = (await r.json()).error || msg; } catch {}
+    throw new Error(msg);
+  }
+  return r;
+}
+
+function schedule() { clearTimeout(timer); timer = setTimeout(refresh, 250); remember(); }
+
+async function refresh() {
+  try {
+    const r = await post("/api/render", job({ format: "png", layout: "dymo" }));
+    const url = URL.createObjectURL(await r.blob());
+    $("#pv").src = url;
+    if (lastUrl) URL.revokeObjectURL(lastUrl);
+    lastUrl = url;
+    status("");
+  } catch (e) { status(e.message, "bad"); }
+}
+
+function pickTemplate(id, values) {
+  tpl = cfg.templates.find(t => t.id === id) || cfg.templates[0];
+  for (const b of document.querySelectorAll(".tpl")) b.setAttribute("aria-pressed", b.dataset.id === tpl.id);
+  $("#tpl-desc").textContent = tpl.description;
+  $("#pv-size").textContent = `${tpl.size[0]} × ${tpl.size[1]} mm`;
+  const box = $("#fields");
+  box.innerHTML = "";
+  const saved = values || store.get("fields:" + tpl.id) || {};
+  for (const f of tpl.fields) {
+    const l = document.createElement("label");
+    l.innerHTML = `<span></span><small></small><input type="text" maxlength="60" autocomplete="off" spellcheck="false">`;
+    l.querySelector("span").textContent = f.label;
+    l.querySelector("small").textContent = f.hint || "";
+    const i = l.querySelector("input");
+    i.id = "f-" + f.key; i.placeholder = f.example || ""; i.value = saved[f.key] ?? "";
+    i.addEventListener("input", schedule);
+    box.appendChild(l);
+  }
+  schedule();
+}
+
+function setLogo(value, thumbSrc) {
+  logo = value;
+  const t = $("#logo-thumb");
+  if (thumbSrc) { t.src = thumbSrc; t.style.display = "inline-block"; } else { t.removeAttribute("src"); t.style.display = "none"; }
+  schedule();
+}
+
+function shrink(file) {   // downscale big photos before sending them
+  return new Promise((ok, bad) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1400 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+      x.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      ok(c.toDataURL("image/png"));
+    };
+    img.onerror = () => bad(new Error("that file isn't an image the browser can read"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function download(fmt, layout) {
+  try {
+    status("Making the file…");
+    const name = $("#save-name").value || tpl.id;
+    const r = await post("/api/render", job({ format: fmt, layout, filename: name, copies: +$("#copies").value || 1 }));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(await r.blob());
+    a.download = `${name.replace(/[^\w.-]+/g, "-")}-${layout}.${fmt}`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    status("Downloaded.", "good");
+  } catch (e) { status(e.message, "bad"); }
+}
+
+async function loadLibrary() {
+  if (!cfg.lan) return;
+  try {
+    const r = await fetch("/api/saved"); const { saved } = await r.json();
+    const ul = $("#lib"); ul.innerHTML = "";
+    if (!saved.length) { ul.innerHTML = `<li><span class="note">Nothing saved yet.</span></li>`; return; }
+    for (const s of saved) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span><b></b> <small></small></span><button class="b" type="button">Load</button><button class="b" type="button" aria-label="Delete">✕</button>`;
+      li.querySelector("b").textContent = s.name;
+      li.querySelector("small").textContent = (cfg.templates.find(t => t.id === s.template) || {}).name || s.template;
+      const [load, del] = li.querySelectorAll("button");
+      load.onclick = async () => {
+        const e = await (await fetch("/api/saved/" + encodeURIComponent(s.id))).json();
+        $("#i-title").value = e.info?.title || ""; $("#i-line2").value = e.info?.line2 || ""; $("#i-line3").value = e.info?.line3 || "";
+        $("#save-name").value = e.name;
+        applyLogo(e.logo);
+        pickTemplate(e.template, e.fields);
+        status(`Loaded "${e.name}".`, "good");
+      };
+      del.onclick = async () => {
+        if (!confirm(`Remove "${s.name}" from the library?`)) return;
+        await fetch("/api/saved/" + encodeURIComponent(s.id), { method: "DELETE" });
+        loadLibrary();
+      };
+      ul.appendChild(li);
+    }
+  } catch (e) { status("Library: " + e.message, "bad"); }
+}
+
+function applyLogo(spec) {
+  const pick = $("#logo-pick");
+  if (spec && spec.library) { pick.value = "lib:" + spec.library; setLogo(spec, `/api/logos/${encodeURIComponent(spec.library)}.png`); }
+  else if (typeof spec === "string") { pick.value = "upload"; setLogo(spec, spec); }
+  else { pick.value = ""; setLogo(null); }
+}
+
+async function init() {
+  cfg = await (await fetch("/api/config")).json();
+  document.body.classList.toggle("is-lan", cfg.lan);
+  $("#print").disabled = !cfg.can_print;
+  if (cfg.lan && !cfg.can_print) $("#print").title = "No printer is set up on this server";
+  $("#ver").textContent = "v" + cfg.version;
+  const box = $("#tpls");
+  for (const t of cfg.templates) {
+    const b = document.createElement("button");
+    b.className = "tpl"; b.type = "button"; b.dataset.id = t.id;
+    b.innerHTML = "<b></b><span></span>";
+    b.querySelector("b").textContent = t.name;
+    b.querySelector("span").textContent = `${t.make} · ${t.part}`;
+    b.onclick = () => pickTemplate(t.id);
+    box.appendChild(b);
+  }
+  const info = store.get("info") || {};
+  $("#i-title").value = info.title || ""; $("#i-line2").value = info.line2 || ""; $("#i-line3").value = info.line3 || "";
+  for (const id of ["#i-title", "#i-line2", "#i-line3"]) $(id).addEventListener("input", schedule);
+  if (cfg.lan) {
+    try {
+      const { logos } = await (await fetch("/api/logos")).json();
+      for (const n of logos) { const o = document.createElement("option"); o.value = "lib:" + n; o.textContent = "Shared: " + n; $("#logo-pick").appendChild(o); }
+    } catch {}
+    loadLibrary();
+  }
+  pickTemplate(store.get("tpl") || cfg.templates[0].id);
+}
+
+$("#logo-pick").onchange = e => {
+  const v = e.target.value;
+  if (v === "upload") $("#logo-file").click();
+  else if (v.startsWith("lib:")) setLogo({ library: v.slice(4) }, `/api/logos/${encodeURIComponent(v.slice(4))}.png`);
+  else setLogo(null);
+};
+$("#logo-file").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const d = await shrink(f); setLogo(d, d); } catch (err) { status(err.message, "bad"); }
+};
+$("#example").onclick = () => { for (const f of tpl.fields) $("#f-" + f.key).value = f.example || ""; schedule(); };
+$("#clear").onclick = () => { for (const f of tpl.fields) $("#f-" + f.key).value = ""; schedule(); };
+for (const b of document.querySelectorAll("[data-dl]")) b.onclick = () => download(...b.dataset.dl.split(":"));
+$("#print").onclick = async () => {
+  const copies = Math.max(1, Math.min(10, +$("#copies").value || 1));
+  $("#print").disabled = true;
+  try {
+    status(`Sending ${copies} to ${cfg.printer}…`);
+    const r = await post("/api/print", job({ copies }));
+    const { jobs } = await r.json();
+    status(`Printing ${copies} (job${jobs.length > 1 ? "s" : ""} ${jobs.join(", ")}).`, "good");
+  } catch (e) { status(e.message, "bad"); }
+  $("#print").disabled = !cfg.can_print;
+};
+$("#save").onclick = async () => {
+  const name = $("#save-name").value.trim();
+  if (!name) { status("Give the label a name first.", "bad"); $("#save-name").focus(); return; }
+  try { await post("/api/saved", job({ name })); status(`Saved "${name}".`, "good"); loadLibrary(); }
+  catch (e) { status(e.message, "bad"); }
+};
+init().catch(e => status("Couldn't load: " + e.message, "bad"));
+</script>
+</body>
+</html>

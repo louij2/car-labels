@@ -1,0 +1,29 @@
+{
+  "id": "generic-part",
+  "name": "Generic part sticker",
+  "make": "Any",
+  "part": "Any module or part",
+  "description": "A plain sticker for anything without its own template: maker, part number, a description, a serial with its barcode, and origin.",
+  "size": [56, 40],
+  "frame": 2.5,
+  "fields": [
+    {"key": "maker", "label": "Maker / brand", "example": "BOSCH"},
+    {"key": "date", "label": "Date code", "example": "2019-06", "hint": "Optional"},
+    {"key": "part_no", "label": "Part number", "example": "0 261 S12 345"},
+    {"key": "desc", "label": "Description", "example": "ENGINE CONTROL UNIT", "hint": "Optional"},
+    {"key": "serial", "label": "Serial (barcode)", "example": "9123456789", "hint": "Optional; becomes the barcode"},
+    {"key": "voltage", "label": "Voltage", "example": "12V", "hint": "Optional"},
+    {"key": "origin", "label": "Origin", "example": "MADE IN GERMANY", "hint": "Optional"}
+  ],
+  "elements": [
+    {"t": "text", "s": "{maker}", "x": 3, "y": 3.2, "h": 4.6, "font": "sansbold", "fit": 34},
+    {"t": "text", "s": "{date}", "x": 53, "y": 4.4, "h": 2.3, "font": "sans", "anchor": "r", "fit": 16, "if": "date"},
+    {"t": "text", "s": "{part_no}", "x": 3, "y": 10.5, "h": 3.2, "font": "sans", "fit": 50},
+    {"t": "text", "s": "{desc}", "x": 3, "y": 15.6, "h": 2.2, "font": "cond", "fit": 50, "if": "desc"},
+    {"t": "line", "x0": 3, "x1": 53, "y": 19.6},
+    {"t": "barcode", "s": "{serial}", "x": 28, "y": 21.4, "h": 8.0, "w": 50, "anchor": "c", "if": "serial"},
+    {"t": "text", "s": "{serial}", "x": 28, "y": 30.6, "h": 2.2, "font": "sans", "anchor": "c", "fit": 50, "if": "serial"},
+    {"t": "text", "s": "{voltage}", "x": 3, "y": 35.0, "h": 2.0, "font": "sans", "if": "voltage"},
+    {"t": "text", "s": "{origin}", "x": 53, "y": 35.3, "h": 1.5, "font": "sans", "anchor": "r", "fit": 40, "if": "origin"}
+  ]
+}

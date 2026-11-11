@@ -1,0 +1,32 @@
+{
+  "id": "bmw-aisin-tcu",
+  "name": "BMW · Aisin AW gearbox TCU",
+  "make": "BMW",
+  "part": "Transmission control unit",
+  "description": "The white Aisin AW sticker on BMW 8-speed auto TCUs (F20/F21 M135i/M140i and others).",
+  "size": [56, 47.2],
+  "frame": 2.5,
+  "fields": [
+    {"key": "date", "label": "Date code", "example": "150120", "hint": "Top right, 6 digits"},
+    {"key": "prefix", "label": "Code left of the Aisin number", "example": "2400", "hint": "Usually 2400"},
+    {"key": "aisin_part", "label": "Aisin number", "example": "8612345 01", "hint": "Second row, e.g. 5A20559 01"},
+    {"key": "bmw_part", "label": "BMW number", "example": "674608 10", "hint": "Third row, above the line"},
+    {"key": "serial", "label": "Serial (under the barcode)", "example": "1650101A100001", "hint": "Becomes the barcode too"},
+    {"key": "maker", "label": "Maker line", "example": "AISIN  AW  CO., LTD."},
+    {"key": "voltage", "label": "Voltage", "example": "12V"},
+    {"key": "origin", "label": "Origin", "example": "JAPAN"}
+  ],
+  "elements": [
+    {"t": "text", "s": "BMW", "x": 2.5, "y": 3.5, "h": 5.05, "w": 17.8, "font": "sansbold"},
+    {"t": "text", "s": "{date}", "x": 53.5, "y": 6.15, "h": 2.45, "wpc": 1.933, "wmax": 30, "font": "sans", "anchor": "r"},
+    {"t": "text", "s": "{prefix}", "x": 2.35, "y": 12.0, "h": 2.4, "wpc": 1.925, "wmax": 13, "font": "sans"},
+    {"t": "text", "s": "{aisin_part}", "x": 16.7, "y": 12.0, "h": 2.4, "wpc": 1.85, "wmax": 36, "font": "sans"},
+    {"t": "text", "s": "{bmw_part}", "x": 2.35, "y": 18.0, "h": 2.4, "wpc": 1.867, "wmax": 50, "font": "sans"},
+    {"t": "line", "x0": 2.35, "x1": 53.6, "y": 22.4},
+    {"t": "barcode", "s": "{serial}", "x": 28, "y": 24.1, "h": 9.6, "w": 51.3, "anchor": "c"},
+    {"t": "text", "s": "{serial}", "x": 28, "y": 34.7, "h": 2.5, "wpc": 1.957, "wmax": 50, "font": "sans", "anchor": "c"},
+    {"t": "text", "s": "{maker}", "x": 28.1, "y": 39.5, "h": 1.5, "wpc": 0.7615, "wmax": 50, "font": "sansbold", "anchor": "c", "letterspace": true},
+    {"t": "text", "s": "{voltage}", "x": 2.35, "y": 43.0, "h": 2.2, "wpc": 1.767, "wmax": 15, "font": "sans"},
+    {"t": "text", "s": "{origin}", "x": 53.6, "y": 43.6, "h": 1.4, "wpc": 1.06, "wmax": 20, "font": "sans", "anchor": "r"}
+  ]
+}
