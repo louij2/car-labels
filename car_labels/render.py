@@ -210,12 +210,15 @@ def decode_logo(data):
 
 
 def has_info(info, logo):
-    return bool(logo) or any(str(info.get(k, "")).strip() for k in ("title", "line2", "line3"))
+    return (bool(logo) or info.get("_logo2") is not None
+            or any(str(info.get(k, "")).strip() for k in ("title", "line2", "line3", "caption2")))
 
 
 def info_card(info, logo=None, width=56):
     """Logo on top (optional), then a bold title and two smaller lines, centred.
-    With a logo the sizes match the Navardi card; without one, the older 3-line strip."""
+    With a logo the sizes match the Navardi card; without one, the older 3-line strip.
+    info["_logo2"] (an image) adds a second logo along the bottom, e.g. the tuner's,
+    with info["caption2"] in small capitals above it ("TUNED BY")."""
     lines = [str(info.get(k, "")).strip() for k in ("title", "line2", "line3")]
     if logo is not None:   # (ink height, font, gap to the next line)
         style = [(3.2, "sansbold", 5.5), (2.45, "sansbold", 4.4), (1.65, "sans", 0)]
@@ -229,12 +232,26 @@ def info_card(info, logo=None, width=56):
             rows.append((s, y, h, font))
             end = y + h
             y += gap
+    logo2, cap = info.get("_logo2"), str(info.get("caption2", "")).strip()
+    if cap:
+        y = end + 2.4 if rows or logo is not None else 3.0
+        rows.append((" ".join(cap.upper()), y, 1.5, "sansbold"))
+        end = y + 1.5
+    l2 = None
+    if logo2 is not None:
+        aspect = logo2.width / logo2.height
+        lw = min(width * 0.5, 6.5 * aspect)
+        y = end + (1.4 if cap else 2.4) if (rows or logo is not None) else 3.0
+        l2 = (y, lw)
+        end = y + lw / aspect
     c = Canvas(width, max(12, end + 2.6))
     c.d.rounded_rectangle((2, 2, c.img.width - 3, c.img.height - 3), radius=c.px(2.5), outline=0, width=4)
     if logo is not None:
         c.image(logo, width / 2, 1.9, w=width * 0.645, h=13.5, anchor="c")
     for s, y, h, font in rows:
         c.text(s, width / 2, y, h, font=font, anchor="c", fit=width - 6)
+    if l2:
+        c.image(logo2, width / 2, l2[0], w=l2[1], anchor="c")
     return c.img
 
 

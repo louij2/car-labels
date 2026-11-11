@@ -141,7 +141,7 @@ def _job():
         raise render.LabelError("unknown template")
     known = {f["key"] for f in tpl["fields"]}
     fields = {k: str(v)[:80] for k, v in (body.get("fields") or {}).items() if k in known}
-    info = {k: str(v)[:80] for k, v in (body.get("info") or {}).items() if k in ("title", "line2", "line3")}
+    info = {k: str(v)[:80] for k, v in (body.get("info") or {}).items() if k in ("title", "line2", "line3", "caption2")}
     fit = body.get("fit")
     if fit:
         try:
@@ -149,6 +149,9 @@ def _job():
         except (TypeError, ValueError, IndexError, KeyError):
             raise render.LabelError("size on the part must be two numbers in mm")
     body["fit"] = fit or None
+    logo2 = _logo(body.get("logo2"))
+    if logo2 is not None:
+        info["_logo2"] = logo2
     return tpl, fields, info, _logo(body.get("logo")), body
 
 
@@ -250,8 +253,9 @@ def saved_put():
     lan_only()
     tpl, fields, info, _, body = _job()
     sid = _slug(body.get("name", ""))
+    info.pop("_logo2", None)
     entry = {"name": str(body["name"])[:80], "template": tpl["id"], "fields": fields, "info": info,
-             "logo": body.get("logo"), "fit": body["fit"], "notes": str(body.get("notes", ""))[:500],
+             "logo": body.get("logo"), "logo2": body.get("logo2"), "fit": body["fit"], "notes": str(body.get("notes", ""))[:500],
              "saved_at": datetime.datetime.now().isoformat(timespec="seconds")}
     tmp = os.path.join(_saved_dir(), f".{sid}.tmp")
     with open(tmp, "w") as f:

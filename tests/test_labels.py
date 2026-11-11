@@ -100,3 +100,15 @@ def test_fit_to_space_on_the_part():
     with pytest.raises(render.LabelError):
         render.dymo_label(t, example(t), fit=(120, 80))  # wider than the label both ways
     assert render.to_pdf(render.a4_sheet(t, example(t), fit=(100, 50)))[:4] == b"%PDF"
+
+
+def test_second_logo_and_caption():
+    logo = Image.new("L", (400, 100), 255)
+    logo.paste(0, (10, 10, 390, 90))
+    plain = render.info_card({"title": "S1 - ECU"}, logo)
+    both = render.info_card({"title": "S1 - ECU", "caption2": "tuned by", "_logo2": logo}, logo)
+    assert both.height > plain.height and both.width == plain.width
+    only2 = render.info_card({"_logo2": logo})
+    assert only2.height >= round(12 * render.MM)
+    t = TEMPLATES["vag-engine-ecu"]
+    render.dymo_label(t, example(t), {"title": "x", "caption2": "TUNED BY", "_logo2": logo}, logo, fit=(100, 50))

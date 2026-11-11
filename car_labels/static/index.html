@@ -103,13 +103,19 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
         <label>Title<small>Big and bold</small><input type="text" id="i-title" maxlength="40" placeholder="M135i - TCU"></label>
         <label>Line 2<small>Medium</small><input type="text" id="i-line2" maxlength="50" placeholder="TQ: 650nm"></label>
         <label>Line 3<small>Small print</small><input type="text" id="i-line3" maxlength="70" placeholder="BMW 674608 10 · Aisin AW 9453614 01"></label>
-        <label>Logo<small>Black on white works best</small>
-          <select id="logo-pick"><option value="">No logo</option><option value="upload">Upload an image…</option></select>
+        <label>Logo<small>Top of the card. Black on white works best</small>
+          <select id="logo-pick" class="logo-pick" data-slot="logo"><option value="">No logo</option><option value="upload">Upload an image…</option></select>
         </label>
+        <label>Second logo<small>Along the bottom, e.g. the tuner</small>
+          <select id="logo2-pick" class="logo-pick" data-slot="logo2"><option value="">No logo</option><option value="upload">Upload an image…</option></select>
+        </label>
+        <label>Caption above it<small>Small capitals</small><input type="text" id="i-caption2" maxlength="30" placeholder="TUNED BY"></label>
       </div>
       <div class="row">
         <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp" hidden>
+        <input type="file" id="logo2-file" accept="image/png,image/jpeg,image/webp" hidden>
         <img class="logo-thumb" id="logo-thumb" alt="Chosen logo">
+        <img class="logo-thumb" id="logo2-thumb" alt="Chosen second logo">
       </div>
     </section>
 
@@ -153,17 +159,18 @@ const store = {
   get(k) { try { return JSON.parse(localStorage.getItem("car-labels:" + k)); } catch { return null; } },
   set(k, v) { try { localStorage.setItem("car-labels:" + k, JSON.stringify(v)); } catch {} },
 };
-let cfg, tpl, logo = null, timer, lastUrl;
+let cfg, tpl, timer, lastUrl;
+const logos = { logo: null, logo2: null };
 
 function status(msg, kind = "") { const s = $("#status"); s.textContent = msg; s.className = "status " + kind; }
 
 function job(extra = {}) {
   const fields = {};
   for (const f of tpl.fields) fields[f.key] = $("#f-" + f.key).value;
-  const info = { title: $("#i-title").value, line2: $("#i-line2").value, line3: $("#i-line3").value };
+  const info = { title: $("#i-title").value, line2: $("#i-line2").value, line3: $("#i-line3").value, caption2: $("#i-caption2").value };
   const fw = +$("#fit-w").value, fh = +$("#fit-h").value;
   const fit = fw > 0 && fh > 0 ? [fw, fh] : null;
-  return { template: tpl.id, fields, info, logo, fit, ...extra };
+  return { template: tpl.id, fields, info, logo: logos.logo, logo2: logos.logo2, fit, ...extra };
 }
 
 function remember() {
@@ -220,9 +227,9 @@ function pickTemplate(id, values, fitValues) {
   schedule();
 }
 
-function setLogo(value, thumbSrc) {
-  logo = value;
-  const t = $("#logo-thumb");
+function setLogo(value, thumbSrc, slot = "logo") {
+  logos[slot] = value;
+  const t = $("#" + slot + "-thumb");
   if (thumbSrc) { t.src = thumbSrc; t.style.display = "inline-block"; } else { t.removeAttribute("src"); t.style.display = "none"; }
   schedule();
 }
@@ -273,6 +280,8 @@ async function loadLibrary() {
       load.onclick = async () => {
         const e = await (await fetch("/api/saved/" + encodeURIComponent(s.id))).json();
         $("#i-title").value = e.info?.title || ""; $("#i-line2").value = e.info?.line2 || ""; $("#i-line3").value = e.info?.line3 || "";
+        $("#i-caption2").value = e.info?.caption2 || "";
+        applyLogo(e.logo2, "logo2");
         $("#save-name").value = e.name;
         applyLogo(e.logo);
         pickTemplate(e.template, e.fields, e.fit || null);
@@ -288,11 +297,11 @@ async function loadLibrary() {
   } catch (e) { status("Library: " + e.message, "bad"); }
 }
 
-function applyLogo(spec) {
-  const pick = $("#logo-pick");
-  if (spec && spec.library) { pick.value = "lib:" + spec.library; setLogo(spec, `/api/logos/${encodeURIComponent(spec.library)}.png`); }
-  else if (typeof spec === "string") { pick.value = "upload"; setLogo(spec, spec); }
-  else { pick.value = ""; setLogo(null); }
+function applyLogo(spec, slot = "logo") {
+  const pick = $("#" + slot + "-pick");
+  if (spec && spec.library) { pick.value = "lib:" + spec.library; setLogo(spec, `/api/logos/${encodeURIComponent(spec.library)}.png`, slot); }
+  else if (typeof spec === "string") { pick.value = "upload"; setLogo(spec, spec, slot); }
+  else { pick.value = ""; setLogo(null, null, slot); }
 }
 
 async function init() {
@@ -313,27 +322,32 @@ async function init() {
   }
   const info = store.get("info") || {};
   $("#i-title").value = info.title || ""; $("#i-line2").value = info.line2 || ""; $("#i-line3").value = info.line3 || "";
-  for (const id of ["#i-title", "#i-line2", "#i-line3", "#fit-w", "#fit-h"]) $(id).addEventListener("input", schedule);
+  $("#i-caption2").value = info.caption2 || "";
+  for (const id of ["#i-title", "#i-line2", "#i-line3", "#i-caption2", "#fit-w", "#fit-h"]) $(id).addEventListener("input", schedule);
   if (cfg.lan) {
     try {
-      const { logos } = await (await fetch("/api/logos")).json();
-      for (const n of logos) { const o = document.createElement("option"); o.value = "lib:" + n; o.textContent = "Shared: " + n; $("#logo-pick").appendChild(o); }
+      const { logos: shared } = await (await fetch("/api/logos")).json();
+      for (const n of shared) for (const sel of document.querySelectorAll(".logo-pick")) {
+        const o = document.createElement("option"); o.value = "lib:" + n; o.textContent = "Shared: " + n; sel.appendChild(o);
+      }
     } catch {}
     loadLibrary();
   }
   pickTemplate(store.get("tpl") || cfg.templates[0].id);
 }
 
-$("#logo-pick").onchange = e => {
-  const v = e.target.value;
-  if (v === "upload") $("#logo-file").click();
-  else if (v.startsWith("lib:")) setLogo({ library: v.slice(4) }, `/api/logos/${encodeURIComponent(v.slice(4))}.png`);
-  else setLogo(null);
-};
-$("#logo-file").onchange = async e => {
-  const f = e.target.files[0]; if (!f) return;
-  try { const d = await shrink(f); setLogo(d, d); } catch (err) { status(err.message, "bad"); }
-};
+for (const slot of ["logo", "logo2"]) {
+  $("#" + slot + "-pick").onchange = e => {
+    const v = e.target.value;
+    if (v === "upload") $("#" + slot + "-file").click();
+    else if (v.startsWith("lib:")) setLogo({ library: v.slice(4) }, `/api/logos/${encodeURIComponent(v.slice(4))}.png`, slot);
+    else setLogo(null, null, slot);
+  };
+  $("#" + slot + "-file").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const d = await shrink(f); setLogo(d, d, slot); } catch (err) { status(err.message, "bad"); }
+  };
+}
 $("#example").onclick = () => { for (const f of tpl.fields) $("#f-" + f.key).value = f.example || ""; schedule(); };
 $("#clear").onclick = () => { for (const f of tpl.fields) $("#f-" + f.key).value = ""; schedule(); };
 for (const b of document.querySelectorAll("[data-dl]")) b.onclick = () => download(...b.dataset.dl.split(":"));
