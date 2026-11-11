@@ -34,10 +34,10 @@ to the tests, run them, open a PR.
 ## Run it
 
 ```sh
-docker run -d --name car-labels -p 8095:8080 -v /path/to/data:/data louij2/car-labels
+docker run -d --name car-labels -p 8710:8080 -v /path/to/data:/data louij2/car-labels
 ```
 
-Then open http://localhost:8095. That gives you preview and downloads.
+Then open http://localhost:8710. That gives you preview and downloads.
 
 ### Printing to a DYMO
 
@@ -45,7 +45,7 @@ Run a CUPS server with the DYMO queue (for example `olbat/cupsd`, which ships th
 PPDs). Share its `/run/cups` with this container and name the queue:
 
 ```sh
-docker run -d --name car-labels -p 8095:8080 --user 99:100 \
+docker run -d --name car-labels -p 8710:8080 --user 99:100 \
   -v /path/to/data:/data -v cups-sock:/run/cups \
   -e PRINTER=DYMO_LabelWriter_450 louij2/car-labels
 ```
@@ -73,7 +73,7 @@ Template: [`unraid/car-labels.xml`](unraid/car-labels.xml).
 ```sh
 pip install -r requirements.txt pytest
 python -m pytest -q
-flask --app car_labels.app run --port 8095
+flask --app car_labels.app run --port 8710
 ```
 
 Fonts are DejaVu (`fonts-dejavu-core` + `fonts-dejavu-extra`). Set `FONT_DIR` if yours

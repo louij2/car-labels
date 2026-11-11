@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 IMG=louij2/car-labels
 TAG=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' car_labels/__init__.py)
 C=car-labels
-PORT=8095
+PORT=8710
 TPL=/boot/config/plugins/dockerMan/templates-user/my-$C.xml
 RECREATE=/mnt/user/appdata/compose-to-templates/tpl-recreate.sh
 
