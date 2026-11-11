@@ -255,29 +255,50 @@ def _marks(d, y0, y1, w_px):
             d.line((x - k, y, x + k, y), fill=0, width=2)
 
 
-def pieces(tpl, fields, info=None, logo=None, scale=None):
-    """The sticker (rotated to run along the label when it is too wide) and the info card."""
-    s = sticker(tpl, fields, tpl.get("scale", 1.0) if scale is None else scale)
+def fitted(tpl, fields, fit):
+    """The sticker scaled to fit inside fit = (w, h) mm (turned to match its own orientation),
+    centred on a canvas exactly that size, so the cut marks give the space on the part."""
+    fw, fh = (float(v) for v in fit)
+    sw, sh = tpl["size"]
+    if (sw >= sh) != (fw >= fh):
+        fw, fh = fh, fw
+    if not (10 <= fw <= 280 and 10 <= fh <= 280):
+        raise LabelError("size on the part must be 10 to 280 mm each way")
+    s = sticker(tpl, fields, min(fw / sw, fh / sh))
+    canvas = Image.new("L", (round(fw * MM), round(fh * MM)), 255)
+    canvas.paste(s, ((canvas.width - s.width) // 2, (canvas.height - s.height) // 2))
+    return canvas
+
+
+def pieces(tpl, fields, info=None, logo=None, scale=None, fit=None):
+    """The sticker (rotated later to run along the label when it is too wide) and the info card."""
+    if fit:
+        s = fitted(tpl, fields, fit)
+    else:
+        s = sticker(tpl, fields, tpl.get("scale", 1.0) if scale is None else scale)
     out = [s]
     if info is not None and has_info(info, logo):
         out.append(info_card(info, logo))
     return out
 
 
-def dymo_label(tpl, fields, info=None, logo=None):
+def dymo_label(tpl, fields, info=None, logo=None, fit=None):
     """One DYMO 99019 label (59 x 190 mm, 300 dpi), pieces separated by cut lines.
+    fit = (w, h) mm scales the sticker to that space on the part, with cut marks at it.
     Returns (1-bit image, mm of label used)."""
     img = Image.new("L", (W, H), 255)
     d = ImageDraw.Draw(img)
     y = round(2 * MM)
-    for i, p in enumerate(pieces(tpl, fields, info, logo)):
+    for i, p in enumerate(pieces(tpl, fields, info, logo, fit=fit)):
         if p.width > W:
             p = p.rotate(90, expand=True)
+        if p.width > W:
+            raise LabelError("too big for a 59 mm DYMO label both ways round; use the A4 PDF")
         if y + p.height > H:
             raise LabelError("this doesn't fit on one 190 mm DYMO label; shorten the info card")
         img.paste(p, ((W - p.width) // 2, y))
-        if i == 0 and tpl.get("marks"):
-            _marks(d, y, y + p.height, round(tpl["size"][1] * tpl.get("scale", 1) * MM))
+        if i == 0 and (fit or tpl.get("marks")):
+            _marks(d, y, y + p.height, p.width)
         y += p.height + round(2 * MM)
         _cut(d, y)
         y += round(2 * MM)
@@ -287,14 +308,14 @@ def dymo_label(tpl, fields, info=None, logo=None):
     return img.point(lambda v: 0 if v < 128 else 255).convert("1"), y / MM
 
 
-def a4_sheet(tpl, fields, info=None, logo=None, copies=1):
+def a4_sheet(tpl, fields, info=None, logo=None, copies=1, fit=None):
     """True-size stickers on A4 for sticker paper, each with a thin cut outline."""
     page = Image.new("L", (round(A4_W * MM), round(A4_H * MM)), 255)
     d = ImageDraw.Draw(page)
     margin, gap = round(10 * MM), round(6 * MM)
     x = y = margin
     row_h = 0
-    parts = pieces(tpl, fields, info, logo, scale=1.0)
+    parts = pieces(tpl, fields, info, logo, scale=1.0, fit=fit)
     for _ in range(max(1, min(copies, 20))):
         for p in parts:
             if x + p.width > page.width - margin:

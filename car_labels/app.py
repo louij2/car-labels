@@ -142,6 +142,13 @@ def _job():
     known = {f["key"] for f in tpl["fields"]}
     fields = {k: str(v)[:80] for k, v in (body.get("fields") or {}).items() if k in known}
     info = {k: str(v)[:80] for k, v in (body.get("info") or {}).items() if k in ("title", "line2", "line3")}
+    fit = body.get("fit")
+    if fit:
+        try:
+            fit = [float(fit[0]), float(fit[1])]
+        except (TypeError, ValueError, IndexError, KeyError):
+            raise render.LabelError("size on the part must be two numbers in mm")
+    body["fit"] = fit or None
     return tpl, fields, info, _logo(body.get("logo")), body
 
 
@@ -151,9 +158,9 @@ def render_label():
     fmt = body.get("format", "png")
     layout = body.get("layout", "dymo")
     if layout == "a4":
-        img = render.a4_sheet(tpl, fields, info, logo, copies=_int(body.get("copies") or 1))
+        img = render.a4_sheet(tpl, fields, info, logo, copies=_int(body.get("copies") or 1), fit=body["fit"])
     else:
-        img, _ = render.dymo_label(tpl, fields, info, logo)
+        img, _ = render.dymo_label(tpl, fields, info, logo, fit=body["fit"])
     name = re.sub(r"[^A-Za-z0-9._-]+", "-", body.get("filename") or tpl["id"]).strip("-") or "label"
     if fmt == "pdf":
         return Response(render.to_pdf(img), mimetype="application/pdf",
@@ -172,7 +179,7 @@ def print_label():
     copies = _int(body.get("copies") or 1)
     if not 1 <= copies <= 10:
         raise render.LabelError("copies must be 1 to 10")
-    img, _ = render.dymo_label(tpl, fields, info, logo)
+    img, _ = render.dymo_label(tpl, fields, info, logo, fit=body["fit"])
     jobs = []
     with tempfile.NamedTemporaryFile(suffix=".png") as f:
         f.write(render.to_png(img))
@@ -232,7 +239,7 @@ def saved_put():
     tpl, fields, info, _, body = _job()
     sid = _slug(body.get("name", ""))
     entry = {"name": str(body["name"])[:80], "template": tpl["id"], "fields": fields, "info": info,
-             "logo": body.get("logo"), "notes": str(body.get("notes", ""))[:500],
+             "logo": body.get("logo"), "fit": body["fit"], "notes": str(body.get("notes", ""))[:500],
              "saved_at": datetime.datetime.now().isoformat(timespec="seconds")}
     tmp = os.path.join(_saved_dir(), f".{sid}.tmp")
     with open(tmp, "w") as f:

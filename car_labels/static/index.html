@@ -83,6 +83,13 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
       <h2><span class="n">2</span>Copy the numbers off the old sticker</h2>
       <p class="sub">Type each field as it is printed. The barcode is generated from the number printed under it.</p>
       <div class="grid" id="fields"></div>
+      <div class="row" style="align-items:flex-end">
+        <label style="flex:1;min-width:220px">Size on the part <small>Optional. Measure the space for the sticker; it is scaled to fit inside, with cut marks at exactly that size.</small>
+          <span style="display:flex;gap:6px;align-items:center;margin-top:4px">
+            <input type="number" id="fit-w" min="10" max="280" step="0.5" placeholder="width" style="margin:0">×
+            <input type="number" id="fit-h" min="10" max="280" step="0.5" placeholder="height" style="margin:0">mm
+          </span></label>
+      </div>
       <div class="row">
         <button class="b" id="example" type="button">Fill with example</button>
         <button class="b" id="clear" type="button">Clear</button>
@@ -154,7 +161,9 @@ function job(extra = {}) {
   const fields = {};
   for (const f of tpl.fields) fields[f.key] = $("#f-" + f.key).value;
   const info = { title: $("#i-title").value, line2: $("#i-line2").value, line3: $("#i-line3").value };
-  return { template: tpl.id, fields, info, logo, ...extra };
+  const fw = +$("#fit-w").value, fh = +$("#fit-h").value;
+  const fit = fw > 0 && fh > 0 ? [fw, fh] : null;
+  return { template: tpl.id, fields, info, logo, fit, ...extra };
 }
 
 function remember() {
@@ -162,6 +171,7 @@ function remember() {
   store.set("tpl", tpl.id);
   store.set("fields:" + tpl.id, j.fields);
   store.set("info", j.info);
+  store.set("fit:" + tpl.id, j.fit);
 }
 
 async function post(url, body) {
@@ -187,7 +197,7 @@ async function refresh() {
   } catch (e) { status(e.message, "bad"); }
 }
 
-function pickTemplate(id, values) {
+function pickTemplate(id, values, fitValues) {
   tpl = cfg.templates.find(t => t.id === id) || cfg.templates[0];
   for (const b of document.querySelectorAll(".tpl")) b.setAttribute("aria-pressed", b.dataset.id === tpl.id);
   $("#tpl-desc").textContent = tpl.description;
@@ -195,6 +205,8 @@ function pickTemplate(id, values) {
   const box = $("#fields");
   box.innerHTML = "";
   const saved = values || store.get("fields:" + tpl.id) || {};
+  const fit = fitValues !== undefined ? fitValues : store.get("fit:" + tpl.id);
+  $("#fit-w").value = fit ? fit[0] : ""; $("#fit-h").value = fit ? fit[1] : "";
   for (const f of tpl.fields) {
     const l = document.createElement("label");
     l.innerHTML = `<span></span><small></small><input type="text" maxlength="60" autocomplete="off" spellcheck="false">`;
@@ -263,7 +275,7 @@ async function loadLibrary() {
         $("#i-title").value = e.info?.title || ""; $("#i-line2").value = e.info?.line2 || ""; $("#i-line3").value = e.info?.line3 || "";
         $("#save-name").value = e.name;
         applyLogo(e.logo);
-        pickTemplate(e.template, e.fields);
+        pickTemplate(e.template, e.fields, e.fit || null);
         status(`Loaded "${e.name}".`, "good");
       };
       del.onclick = async () => {
@@ -301,7 +313,7 @@ async function init() {
   }
   const info = store.get("info") || {};
   $("#i-title").value = info.title || ""; $("#i-line2").value = info.line2 || ""; $("#i-line3").value = info.line3 || "";
-  for (const id of ["#i-title", "#i-line2", "#i-line3"]) $(id).addEventListener("input", schedule);
+  for (const id of ["#i-title", "#i-line2", "#i-line3", "#fit-w", "#fit-h"]) $(id).addEventListener("input", schedule);
   if (cfg.lan) {
     try {
       const { logos } = await (await fetch("/api/logos")).json();

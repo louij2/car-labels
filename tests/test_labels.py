@@ -89,3 +89,14 @@ def test_render_and_library(client):
     assert client.get("/api/saved/dan-s-car", environ_base=lan).json["template"] == t["id"]
     client.delete("/api/saved/dan-s-car", environ_base=lan)
     assert client.get("/api/saved", environ_base=lan).json["saved"] == []
+
+
+def test_fit_to_space_on_the_part():
+    t = TEMPLATES["vag-engine-ecu"]
+    s = render.fitted(t, example(t), (50, 100))          # given either way round
+    assert (round(s.width / render.MM), round(s.height / render.MM)) == (100, 50)
+    img, used = render.dymo_label(t, example(t), fit=(100, 50))
+    assert 100 < used < 110
+    with pytest.raises(render.LabelError):
+        render.dymo_label(t, example(t), fit=(120, 80))  # wider than the label both ways
+    assert render.to_pdf(render.a4_sheet(t, example(t), fit=(100, 50)))[:4] == b"%PDF"
