@@ -1,7 +1,7 @@
 # car-labels
 
 A small web portal for reprinting worn or damaged car part stickers, and for cable labels
-(HDMI/Ethernet flags, wrap-around bands, keystone inserts). Pick the sticker,
+(wrap bands naming the other end, HDMI flags). Pick the sticker,
 type the numbers off the old one, and get a new one: a PNG or PDF for a DYMO LabelWriter
 (59 × 190 mm 99019 labels), or an A4 PDF with the stickers at their real size for sticker
 paper. On your own network it can also print straight to the DYMO and keep a library of
@@ -18,18 +18,14 @@ saved labels for reprints.
 | `generic-part` | Maker, part number, description, serial + barcode, origin |
 | `info-card-only` | Just the info card, for a partner sticker |
 
-### Cable labels (0.4.0)
+### Cable labels
 
-Type the names, one per line; each name gets its own piece and several fit on each label
-(names that don't fit run on to more labels). Sizes are fields with sensible defaults.
+Type one cable per line; several fit on each label, and extras run on to more labels.
 
 | Template | Piece | Per 59 × 190 label |
 |---|---|---|
+| `cable-wrap` | Plain band round the cable naming the **other** end. `GARAGE / LIVING ROOM` gives a pair: LIVING ROOM for the garage end, GARAGE for the living room end. Name repeated round the band (~1.5 turns of a 6 mm cable), like DYMO's cable-wrap mode and the TIA-606 near/far-end idea | 6 pairs |
 | `hdmi-flag` | Flag: face, wrap zone round a 7.5 mm cable, face, 54 mm along the cable | 3 |
-| `eth-flag` | Same flag for a ~6 mm Cat5e/Cat6 cable, 26 mm along | 8 |
-| `eth-wrap` | Band round the cable (~1.5 turns), name repeated round it, alternate rows flipped so it reads from any side or end | 12 |
-| `eth-keystone` | Insert for a keystone jack / patch panel label window, default 15 × 8 mm: **measure yours** | 60 |
-| `eth-pair` | A wrap band and a keystone insert for each name, so both ends of a run match | 6 pairs |
 
 Pieces get crop marks; full-width flags get a cut line between them. See
 `car_labels/cable.py`.

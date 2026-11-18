@@ -10,8 +10,11 @@ A cable template has "kind": "cable" and a "layout":
             the circumference so it reads from any side; every other row is upside down
             so it also reads from either end. About 1.5 turns, so it sticks to itself.
   keystone  a small insert for a keystone jack or patch panel label window, w x h mm.
-  pair      a wrap band and a keystone insert for each name, side by side, so both ends
-            of a run carry the same name.
+  pair      a wrap band and a keystone insert for each name, side by side.
+  ends      plain wrap bands that name the OTHER end of the cable. A line "GARAGE / LIVING ROOM"
+            gives two bands side by side: LIVING ROOM (stick it on at the garage end) and
+            GARAGE (for the living room end). A line with no "/" gives one band as typed.
+            Same orientation all the way round, like DYMO's own cable-wrap mode.
 
 Fields come from the user at print time (no names are baked in):
   names (one per line), each (copies of each name), cable (diameter mm), along (length
@@ -133,7 +136,7 @@ def flag(name, along, face, cable):
     return img
 
 
-def wrap(name, along, cable, turns=1.5):
+def wrap(name, along, cable, turns=1.5, flip=True):
     """A band round the cable: rows of the name across the circumference, every other one flipped."""
     circ = math.pi * (cable + 0.2)
     rows_per_turn = max(3, round(circ / 5.0))
@@ -143,7 +146,7 @@ def wrap(name, along, cable, turns=1.5):
     img = Image.new("L", (w, rh * n), 255)
     for i in range(n):
         row = text_box(name, w, rh, pad=0.1, two_lines=False)
-        img.paste(row.rotate(180) if i % 2 else row, (0, i * rh))
+        img.paste(row.rotate(180) if flip and i % 2 else row, (0, i * rh))
     return img
 
 
@@ -162,6 +165,15 @@ def pieces(tpl, fields):
     items = []
     lay = tpl["layout"]
     each = int(g("each"))
+    if lay == "ends":
+        for line in names(fields):
+            a, _, b = (x.strip() for x in line.partition("/"))
+            far = [b, a] if (a and b) else [a or b]
+            for _ in range(each):
+                items += [wrap(n, g("along"), g("cable"), g("turns"), flip=False) for n in far]
+        if not items:
+            raise render.LabelError("type at least one cable, e.g. GARAGE / LIVING ROOM")
+        return items
     for name in names(fields):
         for _ in range(each):
             if lay == "flag":

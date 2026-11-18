@@ -145,24 +145,18 @@ def test_wrap_covers_the_cable_and_repeats():
     assert round(w.width / render.MM) == 26
 
 
-def test_keystone_size_is_a_parameter():
-    t = CABLES["eth-keystone"]
-    k = cable.keystone("P1", 12, 6)
-    assert (round(k.width / render.MM), round(k.height / render.MM)) == (12, 6)
-    with pytest.raises(render.LabelError):
-        cable.dymo_labels(t, {"names": "x", "win_w": "abc"})
-    with pytest.raises(render.LabelError):
-        cable.dymo_labels(t, {"names": "x", "win_w": "90"})
+def test_cable_wrap_names_the_other_end():
+    t = CABLES["cable-wrap"]
+    assert len(cable.pieces(t, {"names": "GARAGE / LIVING ROOM\nNAS", "each": "2"})) == 6
+    a = cable.pieces(t, {"names": "GARAGE / LIVING ROOM"})
+    b = cable.pieces(t, {"names": "LIVING ROOM"})
+    assert a[0].tobytes() == b[0].tobytes()                                         # first band = the far end
+    assert len(cable.dymo_labels(t, {"names": "\n".join(f"R{i} / S{i}" for i in range(6))})) == 1
 
 
-def test_pair_gives_both_pieces_per_name():
-    t = CABLES["eth-pair"]
-    assert len(cable.pieces(t, {"names": "A\nB", "each": "2"})) == 8
-
-
-def test_cable_render_and_print_api(client):
-    r = client.post("/api/render", json={"template": "eth-wrap", "fields": {"names": "\n".join(f"P{i}" for i in range(40))}})
+def test_cable_render_api(client):
+    r = client.post("/api/render", json={"template": "cable-wrap", "fields": {"names": "\n".join(f"P{i} / Q{i}" for i in range(20))}})
     assert r.status_code == 200 and int(r.headers["X-Labels"]) > 1
-    r = client.post("/api/render", json={"template": "eth-pair", "format": "pdf", "fields": {"names": "A"}})
+    r = client.post("/api/render", json={"template": "cable-wrap", "format": "pdf", "fields": {"names": "A / B"}})
     assert r.data[:4] == b"%PDF"
-    assert client.post("/api/render", json={"template": "eth-flag", "fields": {}}).status_code == 400
+    assert client.post("/api/render", json={"template": "cable-wrap", "fields": {}}).status_code == 400

@@ -1,0 +1,18 @@
+{
+  "id": "cable-wrap",
+  "name": "Cable wrap: other end",
+  "make": "Cables",
+  "part": "Ethernet / any cable",
+  "description": "A plain band that wraps round the cable and says where the OTHER end goes. Type each cable as \"GARAGE / LIVING ROOM\": you get two bands side by side, LIVING ROOM for the garage end and GARAGE for the living room end. A line without \"/\" prints one band as typed. The name repeats round the band so it reads from any side; it wraps about 1.5 times so it sticks to itself.",
+  "layout": "ends",
+  "defaults": {"cable": 6, "along": 26, "turns": 1.5, "each": 1},
+  "fields": [
+    {"key": "names", "type": "lines", "label": "Cables, one per line: this end / other end", "example": "GARAGE / LIVING ROOM", "hint": "Each line gives a matching pair of bands"},
+    {"key": "cable", "label": "Cable diameter (mm)", "example": "6", "hint": "Cat5e/Cat6 about 5-6.5, HDMI about 7.5"},
+    {"key": "along", "label": "Along the cable (mm)", "example": "26", "hint": "Up to 26 puts a pair side by side"},
+    {"key": "each", "label": "Copies of each", "example": "1", "hint": ""}
+  ],
+  "kind": "cable",
+  "size": [0, 0],
+  "elements": []
+}
