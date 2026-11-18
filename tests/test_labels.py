@@ -1,12 +1,15 @@
 import base64
 import io
+import math
 
 import pytest
 from PIL import Image
 
-from car_labels import app as app_mod, render
+from car_labels import app as app_mod, cable, render
 
-TEMPLATES = render.load_templates()
+ALL = render.load_templates()
+TEMPLATES = {k: t for k, t in ALL.items() if t.get("kind") != "cable"}
+CABLES = {k: t for k, t in ALL.items() if t.get("kind") == "cable"}
 
 
 def example(t):
@@ -116,3 +119,50 @@ def test_second_logo_and_caption():
     assert only2.height >= round(12 * render.MM)
     t = TEMPLATES["vag-engine-ecu"]
     render.dymo_label(t, example(t), {"title": "x", "caption2": "TUNED BY", "_logo2": logo}, logo, fit=(100, 50))
+
+
+@pytest.mark.parametrize("tid", sorted(CABLES))
+def test_every_cable_template_renders(tid):
+    t = CABLES[tid]
+    pages = cable.dymo_labels(t, example(t))
+    assert pages and all(p.size == (render.W, render.H) for p in pages)
+    assert render.to_pdf_pages(cable.a4_pages(t, example(t)))[:4] == b"%PDF"
+    with pytest.raises(render.LabelError):
+        cable.dymo_labels(t, {"names": "  \n "})
+
+
+def test_hdmi_flag_matches_the_printed_design():
+    t = CABLES["hdmi-flag"]
+    f = cable.flag("MAC", 54, 19, 7.5)
+    assert round(f.height / render.MM) == 62 and round(f.width / render.MM) == 54   # 19 + 24 + 19
+    assert len(cable.dymo_labels(t, {"names": "A\nB\nC"})) == 1                    # 3 per label, as before
+    assert len(cable.dymo_labels(t, {"names": "A\nB\nC\nD"})) == 2
+
+
+def test_wrap_covers_the_cable_and_repeats():
+    w = cable.wrap("NAS", 26, 6)
+    assert w.height / render.MM >= math.pi * 6 * 1.4                               # ~1.5 turns of Cat6
+    assert round(w.width / render.MM) == 26
+
+
+def test_keystone_size_is_a_parameter():
+    t = CABLES["eth-keystone"]
+    k = cable.keystone("P1", 12, 6)
+    assert (round(k.width / render.MM), round(k.height / render.MM)) == (12, 6)
+    with pytest.raises(render.LabelError):
+        cable.dymo_labels(t, {"names": "x", "win_w": "abc"})
+    with pytest.raises(render.LabelError):
+        cable.dymo_labels(t, {"names": "x", "win_w": "90"})
+
+
+def test_pair_gives_both_pieces_per_name():
+    t = CABLES["eth-pair"]
+    assert len(cable.pieces(t, {"names": "A\nB", "each": "2"})) == 8
+
+
+def test_cable_render_and_print_api(client):
+    r = client.post("/api/render", json={"template": "eth-wrap", "fields": {"names": "\n".join(f"P{i}" for i in range(40))}})
+    assert r.status_code == 200 and int(r.headers["X-Labels"]) > 1
+    r = client.post("/api/render", json={"template": "eth-pair", "format": "pdf", "fields": {"names": "A"}})
+    assert r.data[:4] == b"%PDF"
+    assert client.post("/api/render", json={"template": "eth-flag", "fields": {}}).status_code == 400

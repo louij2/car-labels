@@ -360,3 +360,10 @@ def to_pdf(img):
     buf = io.BytesIO()
     img.convert("L").save(buf, "PDF", resolution=DPI)
     return buf.getvalue()
+
+
+def to_pdf_pages(pages):
+    buf = io.BytesIO()
+    pages = [p.convert("L") for p in pages]
+    pages[0].save(buf, "PDF", resolution=DPI, save_all=True, append_images=pages[1:])
+    return buf.getvalue()

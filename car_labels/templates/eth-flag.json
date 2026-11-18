@@ -1,0 +1,53 @@
+{
+  "id": "eth-flag",
+  "name": "Ethernet cable flag",
+  "make": "Cables",
+  "part": "Ethernet flag, 8 per label",
+  "description": "The same wrap-around flag sized for Cat5e/Cat6: the wrap zone fits a ~6 mm cable, two flags side by side.",
+  "layout": "flag",
+  "defaults": {
+    "cable": 6,
+    "along": 26,
+    "face": 13,
+    "each": 1
+  },
+  "fields": [
+    {
+      "key": "names",
+      "type": "lines",
+      "label": "Names, one per line",
+      "example": "SW1 PORT 1\nSW1 PORT 2\nNAS\nDESK",
+      "hint": "Each name gets its own label piece"
+    },
+    {
+      "key": "cable",
+      "label": "Cable diameter (mm)",
+      "example": "6",
+      "hint": "Cat5e/Cat6 about 5-6.5, HDMI about 7.5"
+    },
+    {
+      "key": "along",
+      "label": "Along the cable (mm)",
+      "example": "26",
+      "hint": "Length along the cable"
+    },
+    {
+      "key": "face",
+      "label": "Flag depth (mm)",
+      "example": "13",
+      "hint": "How far the flag hangs off the cable"
+    },
+    {
+      "key": "each",
+      "label": "Copies of each",
+      "example": "1",
+      "hint": "2 = one for each end of the cable"
+    }
+  ],
+  "kind": "cable",
+  "size": [
+    0,
+    0
+  ],
+  "elements": []
+}

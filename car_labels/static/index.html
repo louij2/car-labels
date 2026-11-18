@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Car Labels</title>
-<meta name="description" content="Reprint a damaged car part sticker: pick the template, type the numbers off the old one, print it on a DYMO or sticker paper.">
+<meta name="description" content="Reprint a damaged car part sticker or label cables (HDMI and Ethernet flags, wrap bands, keystone inserts), then print on a DYMO or sticker paper.">
 <link rel="icon" href="/static/icon.png">
 <style>
 :root {
@@ -40,12 +40,14 @@ section h2 .n { width: 22px; height: 22px; border-radius: 50%; background: var(-
 .tpl b { display: block; font-size: 14px; }
 .tpl span { color: var(--muted); font-size: 12.5px; }
 .tpl[aria-pressed="true"] { border-color: var(--accent); background: var(--soft); box-shadow: inset 0 0 0 1px var(--accent); }
+textarea { resize: vertical; min-height: 110px; }
+.grid .wide { grid-column: 1 / -1; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px 12px; }
 label { display: block; font-size: 13px; font-weight: 600; }
 label small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; min-height: 1em; }
-input[type=text], input[type=number], select { width: 100%; margin-top: 4px; padding: 8px 10px; font: inherit;
+input[type=text], input[type=number], select, textarea { width: 100%; margin-top: 4px; padding: 8px 10px; font: inherit;
   color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
-input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
 button.b { font: inherit; font-size: 14px; padding: 8px 12px; border-radius: 8px; cursor: pointer;
   border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
@@ -56,6 +58,7 @@ button.b:disabled { opacity: .5; cursor: default; }
 .paper img { width: 100%; max-width: 260px; background: var(--paper); box-shadow: 0 2px 10px rgb(0 0 0 / .18); border-radius: 3px; }
 .status { font-size: 13px; color: var(--muted); margin-top: 8px; min-height: 1.4em; }
 .status.bad { color: var(--bad); } .status.good { color: var(--good); }
+body.is-cable .sticker-only { display: none; }
 .lan { display: none; } body.is-lan .lan { display: block; } body.is-lan .lan.row { display: flex; }
 .lib { list-style: none; margin: 8px 0 0; padding: 0; }
 .lib li { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
@@ -69,7 +72,7 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
 <body>
 <header>
   <h1>Car Labels</h1>
-  <p>Reprint a worn or damaged part sticker. Pick the sticker, type the numbers off the old one, then print it.</p>
+  <p>Reprint a worn or damaged part sticker, or label cables: HDMI and Ethernet flags, wrap-around bands and keystone inserts.</p>
 </header>
 <main>
   <div>
@@ -80,10 +83,10 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
     </section>
 
     <section>
-      <h2><span class="n">2</span>Copy the numbers off the old sticker</h2>
-      <p class="sub">Type each field as it is printed. The barcode is generated from the number printed under it.</p>
+      <h2><span class="n">2</span><span id="step2">Copy the numbers off the old sticker</span></h2>
+      <p class="sub" id="step2-sub">Type each field as it is printed. The barcode is generated from the number printed under it.</p>
       <div class="grid" id="fields"></div>
-      <div class="row" style="align-items:flex-end">
+      <div class="row sticker-only" id="fit-row" style="align-items:flex-end">
         <label style="flex:1;min-width:220px">Size on the part <small>Optional. Measure the space for the sticker; it is scaled to fit inside, with cut marks at exactly that size.</small>
           <span style="display:flex;gap:6px;align-items:center;margin-top:4px">
             <input type="number" id="fit-w" min="10" max="280" step="0.5" placeholder="width" style="margin:0">×
@@ -96,7 +99,7 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
       </div>
     </section>
 
-    <section>
+    <section class="sticker-only">
       <h2><span class="n">3</span>Info card <span class="note">(optional)</span></h2>
       <p class="sub">A second sticker to go beside the part: who tuned it, what car it is from, a note. Leave it empty to skip it.</p>
       <div class="grid">
@@ -167,6 +170,7 @@ function status(msg, kind = "") { const s = $("#status"); s.textContent = msg; s
 function job(extra = {}) {
   const fields = {};
   for (const f of tpl.fields) fields[f.key] = $("#f-" + f.key).value;
+  if (tpl.kind === "cable") return { template: tpl.id, fields, ...extra };
   const info = { title: $("#i-title").value, line2: $("#i-line2").value, line3: $("#i-line3").value, caption2: $("#i-caption2").value };
   const fw = +$("#fit-w").value, fh = +$("#fit-h").value;
   const fit = fw > 0 && fh > 0 ? [fw, fh] : null;
@@ -200,6 +204,8 @@ async function refresh() {
     $("#pv").src = url;
     if (lastUrl) URL.revokeObjectURL(lastUrl);
     lastUrl = url;
+    const n = +(r.headers.get("X-Labels") || 1);
+    if (tpl.kind === "cable") $("#pv-size").textContent = n > 1 ? `${n} labels (59 × 190 mm)` : "1 label (59 × 190 mm)";
     status("");
   } catch (e) { status(e.message, "bad"); }
 }
@@ -208,6 +214,12 @@ function pickTemplate(id, values, fitValues) {
   tpl = cfg.templates.find(t => t.id === id) || cfg.templates[0];
   for (const b of document.querySelectorAll(".tpl")) b.setAttribute("aria-pressed", b.dataset.id === tpl.id);
   $("#tpl-desc").textContent = tpl.description;
+  const isCable = tpl.kind === "cable";
+  document.body.classList.toggle("is-cable", isCable);
+  $("#step2").textContent = isCable ? "Names and sizes" : "Copy the numbers off the old sticker";
+  $("#step2-sub").textContent = isCable
+    ? "One name per line; each name gets its own piece. Leave a size empty for the default shown. Names that don't fit one label run on to the next."
+    : "Type each field as it is printed. The barcode is generated from the number printed under it.";
   $("#pv-size").textContent = tpl.size[1] ? `${tpl.size[0]} × ${tpl.size[1]} mm` : "";
   const box = $("#fields");
   box.innerHTML = "";
@@ -216,10 +228,13 @@ function pickTemplate(id, values, fitValues) {
   $("#fit-w").value = fit ? fit[0] : ""; $("#fit-h").value = fit ? fit[1] : "";
   for (const f of tpl.fields) {
     const l = document.createElement("label");
-    l.innerHTML = `<span></span><small></small><input type="text" maxlength="60" autocomplete="off" spellcheck="false">`;
+    const lines = f.type === "lines";
+    l.innerHTML = lines ? `<span></span><small></small><textarea rows="5" autocomplete="off" spellcheck="false"></textarea>`
+                        : `<span></span><small></small><input type="text" maxlength="60" autocomplete="off" spellcheck="false">`;
+    if (lines) l.className = "wide";
     l.querySelector("span").textContent = f.label;
     l.querySelector("small").textContent = f.hint || "";
-    const i = l.querySelector("input");
+    const i = l.querySelector(lines ? "textarea" : "input");
     i.id = "f-" + f.key; i.placeholder = f.example || ""; i.value = saved[f.key] ?? "";
     i.addEventListener("input", schedule);
     box.appendChild(l);

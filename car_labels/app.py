@@ -21,7 +21,7 @@ import tempfile
 
 from flask import Flask, Response, abort, jsonify, request, send_from_directory
 
-from . import __version__, render
+from . import __version__, cable, render
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024
@@ -105,8 +105,8 @@ def config():
     lan = is_lan()
     return {"version": __version__, "lan": lan, "can_print": lan and bool(PRINTER),
             "printer": PRINTER if lan else None,
-            "templates": [{k: t[k] for k in ("id", "name", "make", "part", "description", "fields", "size")}
-                          for t in TEMPLATES.values()]}
+            "templates": [{**{k: t[k] for k in ("id", "name", "make", "part", "description", "fields", "size")},
+                           "kind": t.get("kind", "sticker")} for t in TEMPLATES.values()]}
 
 
 def _logo(spec):
@@ -139,8 +139,8 @@ def _job():
     tpl = TEMPLATES.get(body.get("template"))
     if not tpl:
         raise render.LabelError("unknown template")
-    known = {f["key"] for f in tpl["fields"]}
-    fields = {k: str(v)[:80] for k, v in (body.get("fields") or {}).items() if k in known}
+    limits = {f["key"]: 2000 if f.get("type") == "lines" else 80 for f in tpl["fields"]}
+    fields = {k: str(v)[:limits[k]] for k, v in (body.get("fields") or {}).items() if k in limits}
     info = {k: str(v)[:80] for k, v in (body.get("info") or {}).items() if k in ("title", "line2", "line3", "caption2")}
     fit = body.get("fit")
     if fit:
@@ -160,11 +160,19 @@ def render_label():
     tpl, fields, info, logo, body = _job()
     fmt = body.get("format", "png")
     layout = body.get("layout", "dymo")
+    name = re.sub(r"[^A-Za-z0-9._-]+", "-", body.get("filename") or tpl["id"]).strip("-") or "label"
+    if tpl.get("kind") == "cable":
+        pages = cable.a4_pages(tpl, fields) if layout == "a4" else cable.dymo_labels(tpl, fields)
+        if fmt == "pdf":
+            return Response(render.to_pdf_pages(pages), mimetype="application/pdf",
+                            headers={"Content-Disposition": f'attachment; filename="{name}-{layout}.pdf"'})
+        return Response(render.to_png(cable.side_by_side(pages)), mimetype="image/png",
+                        headers={"Content-Disposition": f'inline; filename="{name}-{layout}.png"',
+                                 "Cache-Control": "no-store", "X-Labels": str(len(pages))})
     if layout == "a4":
         img = render.a4_sheet(tpl, fields, info, logo, copies=_int(body.get("copies") or 1), fit=body["fit"])
     else:
         img, _ = render.dymo_label(tpl, fields, info, logo, fit=body["fit"])
-    name = re.sub(r"[^A-Za-z0-9._-]+", "-", body.get("filename") or tpl["id"]).strip("-") or "label"
     if fmt == "pdf":
         return Response(render.to_pdf(img), mimetype="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="{name}-{layout}.pdf"'})
@@ -182,19 +190,25 @@ def print_label():
     copies = _int(body.get("copies") or 1)
     if not 1 <= copies <= 10:
         raise render.LabelError("copies must be 1 to 10")
-    img, _ = render.dymo_label(tpl, fields, info, logo, fit=body["fit"])
+    if tpl.get("kind") == "cable":
+        pages = cable.dymo_labels(tpl, fields)
+    else:
+        pages = [render.dymo_label(tpl, fields, info, logo, fit=body["fit"])[0]]
+    if len(pages) * copies > 10:
+        raise render.LabelError(f"that is {len(pages) * copies} labels; at most 10 in one go")
     jobs = []
-    with tempfile.NamedTemporaryFile(suffix=".png") as f:
-        f.write(render.to_png(img))
-        f.flush()
-        cmd = ["lp", "-d", PRINTER]
-        for o in PRINT_OPTIONS:
-            cmd += ["-o", o]
-        for _ in range(copies):
-            r = subprocess.run(cmd + [f.name], capture_output=True, text=True, timeout=30)
-            if r.returncode:
-                abort(502, f"printer said: {(r.stderr or r.stdout).strip()}")
-            jobs += re.findall(r"request id is (\S+)", r.stdout)
+    cmd = ["lp", "-d", PRINTER]
+    for o in PRINT_OPTIONS:
+        cmd += ["-o", o]
+    for img in pages:
+        with tempfile.NamedTemporaryFile(suffix=".png") as f:
+            f.write(render.to_png(img))
+            f.flush()
+            for _ in range(copies):
+                r = subprocess.run(cmd + [f.name], capture_output=True, text=True, timeout=30)
+                if r.returncode:
+                    abort(502, f"printer said: {(r.stderr or r.stdout).strip()}")
+                jobs += re.findall(r"request id is (\S+)", r.stdout)
     app.logger.warning("printed %s x%d for %s: %s", tpl["id"], copies, client_ip(), " ".join(jobs))
     return {"jobs": jobs}
 

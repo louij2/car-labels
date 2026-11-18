@@ -1,0 +1,53 @@
+{
+  "id": "hdmi-flag",
+  "name": "HDMI cable flag",
+  "make": "Cables",
+  "part": "HDMI flag, 3 per label",
+  "description": "Wrap-around flag for HDMI cables (the switch-input flags): face, a wrap zone round the cable, face. Wrap the middle band round the cable, then stick the two faces back to back. Defaults give 3 flags per label.",
+  "layout": "flag",
+  "defaults": {
+    "cable": 7.5,
+    "along": 54,
+    "face": 19,
+    "each": 1
+  },
+  "fields": [
+    {
+      "key": "names",
+      "type": "lines",
+      "label": "Names, one per line",
+      "example": "MAC\n5950X\nSTEAM DECK",
+      "hint": "Each name gets its own label piece"
+    },
+    {
+      "key": "cable",
+      "label": "Cable diameter (mm)",
+      "example": "7.5",
+      "hint": "Cat5e/Cat6 about 5-6.5, HDMI about 7.5"
+    },
+    {
+      "key": "along",
+      "label": "Along the cable (mm)",
+      "example": "54",
+      "hint": "Shorter is easier where the cable bends"
+    },
+    {
+      "key": "face",
+      "label": "Flag depth (mm)",
+      "example": "19",
+      "hint": "How far the flag hangs off the cable"
+    },
+    {
+      "key": "each",
+      "label": "Copies of each",
+      "example": "1",
+      "hint": "2 = one for each end of the cable"
+    }
+  ],
+  "kind": "cable",
+  "size": [
+    0,
+    0
+  ],
+  "elements": []
+}
